@@ -26,7 +26,7 @@ jobs:
       - name: Build release APK
         run: gradle --no-daemon :app:assembleRelease
 
-      - name: Print release APK path
+      - name: Show release APK directory
         run: ls -lah app/build/outputs/apk/release || true
 
       - name: Upload release APK artifact
@@ -35,3 +35,4 @@ jobs:
           name: app-release-apk
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+          retention-days: 7
