@@ -162,6 +162,7 @@ public class FloatingOverlayService extends Service {
         closeButton.setGravity(Gravity.CENTER);
         closeButton.setOnClickListener(v -> closeWebPanel());
         header.addView(closeButton, new LinearLayout.LayoutParams(dp(36), dp(36)));
+        bindPanelDrag(titleView);
 
         overlayWebView = new WebView(this);
         WebSettings settings = overlayWebView.getSettings();
@@ -217,6 +218,58 @@ public class FloatingOverlayService extends Service {
         webPanelVisible = false;
     }
 
+    private void bindPanelDrag(View dragHandle) {
+        dragHandle.setOnTouchListener(new View.OnTouchListener() {
+            private int initialX;
+            private int initialY;
+            private float initialTouchX;
+            private float initialTouchY;
+            private long downAt;
+            private boolean dragging;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (panelParams == null) {
+                    return false;
+                }
+
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = panelParams.x;
+                        initialY = panelParams.y;
+                        initialTouchX = event.getRawX();
+                        initialTouchY = event.getRawY();
+                        downAt = System.currentTimeMillis();
+                        dragging = false;
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        if (!dragging) {
+                            long pressDuration = System.currentTimeMillis() - downAt;
+                            int deltaX = (int) Math.abs(event.getRawX() - initialTouchX);
+                            int deltaY = (int) Math.abs(event.getRawY() - initialTouchY);
+                            if (pressDuration < 220 || (deltaX < dp(3) && deltaY < dp(3))) {
+                                return true;
+                            }
+                            dragging = true;
+                        }
+
+                        panelParams.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        panelParams.y = initialY + (int) (event.getRawY() - initialTouchY);
+                        constrainPanelToScreen();
+                        windowManager.updateViewLayout(webPanelView, panelParams);
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        boolean handled = dragging;
+                        dragging = false;
+                        return handled;
+                    default:
+                        return false;
+                }
+            }
+        });
+    }
+
     private void updatePanelPosition() {
         if (ballParams == null || panelParams == null) {
             return;
@@ -243,6 +296,15 @@ public class FloatingOverlayService extends Service {
         if (webPanelView.getParent() != null) {
             windowManager.updateViewLayout(webPanelView, panelParams);
         }
+    }
+
+    private void constrainPanelToScreen() {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int margin = dp(12);
+        int maxX = Math.max(margin, metrics.widthPixels - getPanelWidth() - margin);
+        int maxY = Math.max(margin, metrics.heightPixels - getPanelHeight() - margin);
+        panelParams.x = Math.min(Math.max(panelParams.x, margin), maxX);
+        panelParams.y = Math.min(Math.max(panelParams.y, margin), maxY);
     }
 
     private GradientDrawable buildBallBackground() {
