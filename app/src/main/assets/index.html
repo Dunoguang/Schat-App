@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -16,705 +16,82 @@
             width: 100%;
             max-width: 400px;
             border: 1px solid #ccc;
-        }
-        canvas {
-            display: none;
-            margin-top: 20px;
-            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #000;
         }
         button {
             margin: 10px;
             padding: 10px 20px;
             font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #3b82f6;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2563eb;
         }
         #capturedImage {
             max-width: 100%;
             margin-top: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <h1>简易相机</h1>
-    <video id="video" autoplay></video>
-    <br>
-    <button id="captureBtn">拍照</button>
-    <button id="retakeBtn" style="display: none;">重拍</button>
-    <canvas id="canvas"></canvas>
+    <video id="video" autoplay playsinline></video>
+    <div>
+        <button id="captureBtn">拍照</button>
+        <button id="retakeBtn" style="display: none;">重拍</button>
+    </div>
     <img id="capturedImage" style="display: none;" alt="Captured Image">
 
     <script>
         const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
         const capturedImage = document.getElementById('capturedImage');
 
-        // 请求相机权限并启动视频流
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                video.srcObject = stream;
-            })
-            .catch(err => {
-                console.error('Error accessing camera: ', err);
-                alert('无法访问相机: ' + err.message);
-            });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-        // 拍照功能
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(err => {
+                    console.error('无法访问相机:', err);
+                    alert('无法访问相机: ' + err.message);
+                });
+        }
+
         captureBtn.addEventListener('click', () => {
+            if (!video.videoWidth || !video.videoHeight) {
+                alert('视频尚未准备好，请稍后重试。');
+                return;
+            }
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
-            const dataUrl = canvas.toDataURL('image/png');
-            capturedImage.src = dataUrl;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            capturedImage.src = canvas.toDataURL('image/png');
             capturedImage.style.display = 'block';
             video.style.display = 'none';
             captureBtn.style.display = 'none';
-            retakeBtn.style.display = 'inline';
+            retakeBtn.style.display = 'inline-block';
         });
 
-        // 重拍功能
         retakeBtn.addEventListener('click', () => {
             capturedImage.style.display = 'none';
             video.style.display = 'block';
-            captureBtn.style.display = 'inline';
+            captureBtn.style.display = 'inline-block';
             retakeBtn.style.display = 'none';
         });
+
+        startCamera();
     </script>
-</body>
-</html>
-      margin-top: 14vh;
-    }
-
-    .loading-text {
-      font-size: 1.45rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      background: linear-gradient(135deg, #e6718e, #c95c7a);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      margin-bottom: 18px;
-      text-shadow: 0 1px 2px rgba(255, 200, 200, 0.6);
-    }
-
-    .spinner {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto 14px;
-      position: relative;
-    }
-
-    .spinner-circle {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: conic-gradient(from 0deg, #ffb7c5, #ffd9c0, #ffb7c5);
-      mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 8px));
-      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 8px));
-      animation: spin 0.9s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
-      box-shadow: 0 0 8px rgba(255, 150, 170, 0.5);
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .loading-sub {
-      font-size: 0.82rem;
-      color: #e297ae;
-      background: #fff0e8;
-      display: inline-block;
-      padding: 5px 12px;
-      border-radius: 40px;
-      margin-top: 6px;
-    }
-
-    .main-card {
-      background: #fffaf7;
-      border-radius: 36px 24px 42px 24px;
-      box-shadow: 0 18px 30px rgba(218, 128, 148, 0.22), 0 2px 6px rgba(243, 182, 186, 0.28);
-      overflow: hidden;
-      border: 1px solid #ffddcf;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .hero-section {
-      height: min(18vh, 108px);
-      padding: 0.55rem 0.85rem 0.5rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-      background: linear-gradient(120deg, #ffeaeef5 0%, #ffe2e6 100%);
-      border-bottom: 2px dashed #ffc1bc;
-      overflow: hidden;
-    }
-
-    .yura-avatar {
-      font-size: 2.15rem;
-      filter: drop-shadow(0 7px 10px rgba(201, 112, 124, 0.24));
-      margin-bottom: 4px;
-      line-height: 1;
-    }
-
-    .status-title {
-      font-size: clamp(0.9rem, 5.2vw, 1.14rem);
-      font-weight: 700;
-      background: linear-gradient(125deg, #d46b8a, #b55373);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .sub-status {
-      background: #ffe8e2;
-      padding: 4px 9px;
-      border-radius: 80px;
-      display: inline-block;
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: #c26582;
-      max-width: 100%;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .detail-panel {
-      padding: 10px 10px 12px;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      flex: 1;
-    }
-
-    .cmd-area {
-      background: #fff3ef;
-      border-radius: 22px;
-      padding: 10px 10px 12px;
-      border: 1px solid #ffdad2;
-      box-shadow: inset 0 1px 3px #fbc2bf30, 0 2px 5px rgba(0,0,0,0.02);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      flex: 1;
-    }
-
-    .cmd-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #e68aa6;
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 4px;
-    }
-
-    .terminal-shell {
-      background: #2e2227;
-      color: #ffcfaf;
-      border-radius: 20px;
-      border-left: 6px solid #ffa1b5;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 10px;
-      height: 52vh;
-      min-height: 52vh;
-      max-height: 52vh;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-      overflow: hidden;
-    }
-
-    .terminal-output {
-      flex: 1;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-      touch-action: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: 'JetBrains Mono', Consolas, monospace;
-      font-size: 0.84rem;
-      line-height: 1.35;
-      padding: 2px;
-      min-height: 0;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-
-    .terminal-line {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      font-family: 'JetBrains Mono', Consolas, monospace;
-      font-size: 0.84rem;
-      line-height: 1.35;
-      border-top: 1px solid rgba(255, 172, 192, 0.2);
-      padding-top: 8px;
-      min-height: 24px;
-    }
-
-    .prompt-mark {
-      color: #ffd8e2;
-      font-weight: 700;
-      min-width: 12px;
-      text-align: center;
-      margin-top: 1px;
-    }
-
-    .cmd-inline {
-      flex: 1;
-      outline: none;
-      color: #fff0c9;
-      min-height: 20px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      user-select: text;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      margin-top: 10px;
-      flex-wrap: nowrap;
-    }
-
-    .pink-btn {
-      background: #f49dbb;
-      border: none;
-      padding: 9px 6px;
-      border-radius: 100px;
-      font-weight: 700;
-      font-size: 0.74rem;
-      color: #2f1d24;
-      box-shadow: 0 5px 0 #aa6f84;
-      cursor: pointer;
-      font-family: inherit;
-      letter-spacing: 0.4px;
-      min-width: 0;
-      flex: 1 1 0;
-      touch-action: manipulation;
-      white-space: nowrap;
-    }
-
-    .pink-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 3px 0 #aa6f84;
-    }
-
-    .beige-btn {
-      background: #ffddcf;
-      border: 1px solid #ffbfae;
-      padding: 9px 6px;
-      border-radius: 100px;
-      font-weight: 600;
-      color: #b34b6b;
-      cursor: pointer;
-      min-width: 0;
-      flex: 1 1 0;
-      touch-action: manipulation;
-      box-shadow: 0 4px 0 #d9a593;
-      font-size: 0.72rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .beige-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #d9a593;
-      background: #ffcfbd;
-    }
-
-    .beige-btn:disabled,
-    .pink-btn:disabled {
-      opacity: 0.55;
-      box-shadow: none;
-      transform: none;
-      cursor: not-allowed;
-    }
-
-    .pink-btn {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .dock-hint {
-      margin-top: 7px;
-      text-align: center;
-      font-size: 0.7rem;
-      color: #bf7493;
-    }
-
-    .footer-note {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 0.68rem;
-      color: #d494aa;
-    }
-
-    @media (max-width: 420px) {
-      body {
-        padding: 8px;
-      }
-      .status-title {
-        font-size: clamp(0.84rem, 4.8vw, 1rem);
-      }
-      .yura-avatar {
-        font-size: 1.88rem;
-      }
-      .sub-status { font-size: 0.68rem; }
-      .terminal-shell { height: 54vh; min-height: 54vh; max-height: 54vh; }
-    }
-  </style>
-</head>
-<body>
-<div class="app-container" id="appContainer">
-  <div id="loadingScreen" class="loading-screen">
-    <div class="loading-text">✨ 正在尝试访问由良酱... ✨</div>
-    <div class="spinner">
-      <div class="spinner-circle"></div>
-    </div>
-    <div class="loading-sub">🌸 悄悄靠近中 🌸</div>
-  </div>
-
-  <div id="mainInterface" class="hidden">
-    <div class="main-card">
-      <div class="hero-section">
-        <div class="yura-avatar">🐾🌸 由良酱 🌸🐾</div>
-        <div class="status-title" id="mainStatusTitle">由良酱已无力反抗</div>
-      </div>
-      <div class="detail-panel">
-        <div class="cmd-area">
-          <div class="cmd-label">
-            <span>💻 终端</span> <span style="font-size:12px;">⚡</span>
-          </div>
-
-          <div class="terminal-shell" id="terminalShell">
-            <pre id="rootResultBlock" class="terminal-output"># 点击输入指令</pre>
-            <div class="terminal-line" id="commandLine">
-              <span id="promptMark" class="prompt-mark">$</span>
-              <span
-                id="cmdInline"
-                class="cmd-inline"
-                contenteditable="true"
-              ></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="button-group">
-          <button class="beige-btn" id="historyUpBtn">⬆ 上一条</button>
-          <button class="beige-btn" id="historyDownBtn">⬇ 下一条</button>
-          <button class="pink-btn" id="runBtn">🖤 执行命令 🖤</button>
-          <button class="beige-btn" id="clearBtn">🍬 清除输出</button>
-        </div>
-        <div class="dock-hint">Enter 执行，Shift+Enter 换行，箭头可切换命令历史</div>
-
-        <div class="footer-note">
-          💕 粉肤结界 · 由良酱的契约 💕
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  const COMMAND_HISTORY_KEY = 'webshell_command_history_v1';
-  const OUTPUT_HISTORY_KEY = 'webshell_output_history_v1';
-  const MAX_COMMAND_HISTORY = 100;
-  const DEFAULT_OUTPUT = '# 点击输入指令';
-
-  const loadingScreen = document.getElementById('loadingScreen');
-  const mainInterface = document.getElementById('mainInterface');
-  const mainStatusTitle = document.getElementById('mainStatusTitle');
-  const rootResultBlock = document.getElementById('rootResultBlock');
-  const promptMark = document.getElementById('promptMark');
-  const cmdInline = document.getElementById('cmdInline');
-  const terminalShell = document.getElementById('terminalShell');
-
-  let commandHistory = [];
-  let historyIndex = null;
-  let draftBeforeHistory = '';
-  let currentRootSuccess = false;
-
-  function root_cmd(mycmd) {
-    const raw = NativeBridge.root_cmd(mycmd);
-    return JSON.parse(raw);
-  }
-
-  function updateMainUI() {
-    if (currentRootSuccess) {
-      mainStatusTitle.textContent = '由良酱已无力反抗';
-    } else {
-      mainStatusTitle.textContent = '由良酱开启龙脊背模式';
-    }
-    fitMainTitleOneLine();
-  }
-
-  function fitMainTitleOneLine() {
-    const el = mainStatusTitle;
-    if (!el) return;
-
-    const min = 14;
-    const max = 30;
-    let low = min;
-    let high = max;
-    let best = min;
-
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      el.style.fontSize = mid + 'px';
-      if (el.scrollWidth <= el.clientWidth) {
-        best = mid;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-
-    el.style.fontSize = best + 'px';
-  }
-
-  function updatePrompt() {
-    promptMark.textContent = currentRootSuccess ? '#' : '$';
-  }
-
-  function detectRootStatus() {
-    try {
-      const result = root_cmd('whoami');
-      const stdout = String(result[0] || '');
-      const code = Number(result[2]);
-      currentRootSuccess = (code === 0 && stdout.toLowerCase().includes('root'));
-    } catch (err) {
-      currentRootSuccess = false;
-    }
-    updateMainUI();
-    updatePrompt();
-  }
-
-  function getPromptByStatus() {
-    return currentRootSuccess ? '#' : '$';
-  }
-
-  function getCurrentInputText() {
-    return cmdInline.innerText.replace(/\r/g, '').replace(/\n+/g, '\n').trim();
-  }
-
-  function setCurrentInputText(text) {
-    cmdInline.innerText = text || '';
-  }
-
-  function placeCaretAtEnd(el) {
-    el.focus();
-    const range = document.createRange();
-    range.selectNodeContents(el);
-    range.collapse(false);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-
-  function saveCommandHistory() {
-    localStorage.setItem(COMMAND_HISTORY_KEY, JSON.stringify(commandHistory));
-  }
-
-  function saveOutputHistory(text) {
-    localStorage.setItem(OUTPUT_HISTORY_KEY, text);
-  }
-
-  function updateHistoryButtons() {
-    const hasHistory = commandHistory.length > 0;
-    document.getElementById('historyUpBtn').disabled = !hasHistory;
-    document.getElementById('historyDownBtn').disabled = !hasHistory;
-  }
-
-  function rememberCommand(cmd) {
-    if (!cmd) return;
-
-    const last = commandHistory.length ? commandHistory[commandHistory.length - 1] : '';
-    if (cmd !== last) {
-      commandHistory.push(cmd);
-      if (commandHistory.length > MAX_COMMAND_HISTORY) {
-        commandHistory = commandHistory.slice(commandHistory.length - MAX_COMMAND_HISTORY);
-      }
-      saveCommandHistory();
-    }
-
-    historyIndex = null;
-    draftBeforeHistory = '';
-    updateHistoryButtons();
-  }
-
-  function moveHistory(step) {
-    if (commandHistory.length === 0) return;
-
-    if (historyIndex === null) {
-      draftBeforeHistory = getCurrentInputText();
-      historyIndex = commandHistory.length;
-    }
-
-    const nextIndex = historyIndex + step;
-    if (nextIndex < 0 || nextIndex > commandHistory.length) return;
-
-    historyIndex = nextIndex;
-    if (historyIndex === commandHistory.length) {
-      setCurrentInputText(draftBeforeHistory);
-      historyIndex = null;
-    } else {
-      setCurrentInputText(commandHistory[historyIndex]);
-    }
-  }
-
-  function formatExecutionOutput(stdout, stderr) {
-    const out = String(stdout || '').trim();
-    const err = String(stderr || '').trim();
-
-    if (out && err) return out + '\n' + err;
-    if (out) return out;
-    if (err) return err;
-    return '';
-  }
-
-  function appendOutput(block) {
-    const current = (rootResultBlock.textContent === DEFAULT_OUTPUT) ? '' : rootResultBlock.textContent;
-    const next = current ? current + '\n\n' + block : block;
-    rootResultBlock.textContent = next || DEFAULT_OUTPUT;
-    rootResultBlock.scrollTop = rootResultBlock.scrollHeight;
-    saveOutputHistory(next);
-  }
-
-  function clearOutput() {
-    rootResultBlock.textContent = DEFAULT_OUTPUT;
-    saveOutputHistory('');
-  }
-
-  function loadState() {
-    try {
-      const historyRaw = localStorage.getItem(COMMAND_HISTORY_KEY);
-      if (historyRaw) {
-        const parsed = JSON.parse(historyRaw);
-        if (Array.isArray(parsed)) {
-          commandHistory = parsed.filter(function(item) {
-            return typeof item === 'string' && item.trim() !== '';
-          });
-        }
-      }
-    } catch (e) {}
-
-    try {
-      const outputRaw = localStorage.getItem(OUTPUT_HISTORY_KEY);
-      if (typeof outputRaw === 'string' && outputRaw.trim() !== '') {
-        rootResultBlock.textContent = outputRaw;
-      } else {
-        rootResultBlock.textContent = DEFAULT_OUTPUT;
-      }
-    } catch (e) {
-      rootResultBlock.textContent = DEFAULT_OUTPUT;
-    }
-  }
-
-  function runCommand() {
-    const cmd = getCurrentInputText();
-    if (!cmd) return;
-
-    try {
-      const result = root_cmd(cmd);
-      const stdout = result[0];
-      const stderr = result[1];
-      const code = Number(result[2]);
-
-      if (cmd.toLowerCase() === 'whoami') {
-        const outText = String(stdout || '').toLowerCase();
-        currentRootSuccess = (code === 0 && outText.includes('root'));
-        updateMainUI();
-      }
-
-      updatePrompt();
-      const prompt = getPromptByStatus();
-      const outputText = formatExecutionOutput(stdout, stderr);
-      appendOutput(prompt + ' ' + cmd + (outputText ? '\n' + outputText : ''));
-      rememberCommand(cmd);
-      setCurrentInputText('');
-    } catch (err) {
-      updatePrompt();
-      const prompt = getPromptByStatus();
-      appendOutput(prompt + ' ' + cmd + '\n' + String(err));
-      rememberCommand(cmd);
-      setCurrentInputText('');
-    }
-  }
-
-  function bindEvents() {
-    const upBtn = document.getElementById('historyUpBtn');
-    const downBtn = document.getElementById('historyDownBtn');
-    const runBtn = document.getElementById('runBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const commandLine = document.getElementById('commandLine');
-
-    upBtn.addEventListener('click', function() { moveHistory(-1); });
-    downBtn.addEventListener('click', function() { moveHistory(1); });
-    runBtn.addEventListener('click', runCommand);
-    clearBtn.addEventListener('click', clearOutput);
-
-    commandLine.addEventListener('click', function() {
-      placeCaretAtEnd(cmdInline);
-    });
-
-    cmdInline.addEventListener('input', function() {
-      if (historyIndex !== null) historyIndex = null;
-    });
-
-    cmdInline.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        runCommand();
-      }
-    });
-  }
-
-  function startApp() {
-    loadState();
-    bindEvents();
-    updateHistoryButtons();
-
-    setTimeout(function() {
-      detectRootStatus();
-      loadingScreen.classList.add('hidden');
-      mainInterface.classList.remove('hidden');
-      placeCaretAtEnd(cmdInline);
-      fitMainTitleOneLine();
-    }, 1000);
-  }
-
-  function clearCommandLineOnExit() {
-    setCurrentInputText('');
-  }
-
-  window.addEventListener('load', startApp);
-  window.addEventListener('resize', fitMainTitleOneLine);
-  window.addEventListener('beforeunload', clearCommandLineOnExit);
-  window.addEventListener('pagehide', clearCommandLineOnExit);
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'hidden') {
-      clearCommandLineOnExit();
-    }
-  });
-</script>
 </body>
 </html>
