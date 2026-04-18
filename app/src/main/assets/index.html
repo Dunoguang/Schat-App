@@ -42,6 +42,7 @@
 </head>
 <body>
     <h1>简易相机</h1>
+    <p id="whoamiResult">正在获取 whoami 结果...</p>
     <video id="video" autoplay playsinline></video>
     <div>
         <button id="captureBtn">拍照</button>
@@ -54,9 +55,21 @@
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
         const capturedImage = document.getElementById('capturedImage');
+        const whoamiResult = document.getElementById('whoamiResult');
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
+
+        function updateWhoami() {
+            try {
+                const result = JSON.parse(NativeBridge.root_cmd('whoami'));
+                whoamiResult.textContent = 'whoami: ' + (result[0] || '[empty]') +
+                    '，stderr: ' + (result[1] || '[none]') +
+                    '，status: ' + result[2];
+            } catch (err) {
+                whoamiResult.textContent = 'whoami 调用失败: ' + err.message;
+            }
+        }
 
         function startCamera() {
             navigator.mediaDevices.getUserMedia({ video: true })
@@ -92,6 +105,7 @@
         });
 
         startCamera();
+        updateWhoami();
     </script>
 </body>
 </html>
