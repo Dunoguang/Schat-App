@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Toast;
@@ -27,7 +29,19 @@ public class MainActivity extends AppCompatActivity {
         settings.setJavaScriptEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setDomStorageEnabled(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onPermissionRequest(PermissionRequest request) {
+                if (request.getResources() != null && request.getResources().length > 0) {
+                    request.grant(request.getResources());
+                } else {
+                    request.deny();
+                }
+            }
+        });
 
         webView.addJavascriptInterface(new JsBridge(), "NativeBridge");
         webView.loadUrl("file:///android_asset/index.html");
