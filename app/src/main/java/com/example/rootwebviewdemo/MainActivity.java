@@ -34,6 +34,13 @@ public class MainActivity extends AppCompatActivity {
         webView.addJavascriptInterface(new JsBridge(), "NativeBridge");
         webView.loadUrl("file:///android_asset/index.html");
 
+        // Grant camera permission using root
+        String packageName = getPackageName();
+        RootShellExecutor.CommandResult result = RootShellExecutor.execute("pm grant " + packageName + " android.permission.CAMERA");
+        if (result.statusCode != 0) {
+            // Handle error if needed
+        }
+
         ensureOverlayPermission();
     }
 

@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 
 public final class RootShellExecutor {
@@ -20,7 +22,14 @@ public final class RootShellExecutor {
 
         Process process = null;
         try {
-            process = new ProcessBuilder("su", "-c", normalizedCommand).start();
+            process = new ProcessBuilder("su").start();
+            OutputStream outputStream = process.getOutputStream();
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+            writer.write(normalizedCommand + "\n");
+            writer.write("exit\n");
+            writer.flush();
+            writer.close();
+
             String stdout = readAll(process.getInputStream());
             String stderr = readAll(process.getErrorStream());
             int statusCode = process.waitFor();
