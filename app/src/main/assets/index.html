@@ -19,6 +19,26 @@
             border-radius: 8px;
             background: #000;
         }
+        .video-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 400px;
+        }
+        video {
+            display: block;
+            width: 100%;
+        }
+        .camera-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
         button {
             margin: 10px;
             padding: 10px 20px;
@@ -32,21 +52,43 @@
         button:hover {
             background-color: #2563eb;
         }
+        button.secondary {
+            background-color: #10b981;
+        }
+        button.secondary:hover {
+            background-color: #059669;
+        }
+        button.danger {
+            background-color: #ef4444;
+        }
+        button.danger:hover {
+            background-color: #dc2626;
+        }
         #capturedImage {
             max-width: 100%;
             margin-top: 20px;
             border: 1px solid #ccc;
             border-radius: 8px;
         }
+        .button-group {
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
     <h1>简易相机</h1>
     <p id="whoamiResult">正在获取 whoami 结果...</p>
-    <video id="video" autoplay playsinline></video>
-    <div>
+    <div class="video-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="camera-label" id="cameraLabel">后置摄像头</div>
+    </div>
+    <div class="button-group">
         <button id="captureBtn">拍照</button>
+        <button id="switchCameraBtn" class="secondary">切换摄像头</button>
+    </div>
+    <div class="button-group">
         <button id="retakeBtn" style="display: none;">重拍</button>
+        <button id="saveBtn" style="display: none;" class="secondary">保存照片</button>
     </div>
     <img id="capturedImage" style="display: none;" alt="Captured Image">
 
@@ -54,11 +96,18 @@
         const video = document.getElementById('video');
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        const saveBtn = document.getElementById('saveBtn');
         const capturedImage = document.getElementById('capturedImage');
         const whoamiResult = document.getElementById('whoamiResult');
+        const cameraLabel = document.getElementById('cameraLabel');
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
+
+        let stream = null;
+        let currentFacingMode = 'environment'; // 'environment' for back, 'user' for front
+        let currentImageData = null; // Store the captured image data
 
         function updateWhoami() {
             try {
@@ -71,16 +120,53 @@
             }
         }
 
+        function updateCameraLabel() {
+            cameraLabel.textContent = currentFacingMode === 'user' ? '前置摄像头' : '后置摄像头';
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
         function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
+            stopCamera();
+            const constraints = {
+                video: {
+                    facingMode: currentFacingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(mediaStream => {
+                    stream = mediaStream;
                     video.srcObject = stream;
+                    updateCameraLabel();
                 })
                 .catch(err => {
                     console.error('无法访问相机:', err);
-                    alert('无法访问相机: ' + err.message);
+                    // Try without specific facingMode if the above fails
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(mediaStream => {
+                            stream = mediaStream;
+                            video.srcObject = stream;
+                            updateCameraLabel();
+                        })
+                        .catch(fallbackErr => {
+                            console.error('无法访问相机（备用）:', fallbackErr);
+                            alert('无法访问相机: ' + fallbackErr.message);
+                        });
                 });
         }
+
+        switchCameraBtn.addEventListener('click', () => {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        });
 
         captureBtn.addEventListener('click', () => {
             if (!video.videoWidth || !video.videoHeight) {
@@ -90,18 +176,66 @@
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            capturedImage.src = canvas.toDataURL('image/png');
+
+            // If using front camera, flip the image horizontally
+            if (currentFacingMode === 'user') {
+                const flippedCanvas = flipCanvasHorizontally(canvas);
+                capturedImage.src = flippedCanvas.toDataURL('image/png');
+                currentImageData = flippedCanvas.toDataURL('image/png');
+            } else {
+                capturedImage.src = canvas.toDataURL('image/png');
+                currentImageData = canvas.toDataURL('image/png');
+            }
+
             capturedImage.style.display = 'block';
             video.style.display = 'none';
             captureBtn.style.display = 'none';
+            switchCameraBtn.style.display = 'none';
             retakeBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'inline-block';
         });
+
+        function flipCanvasHorizontally(sourceCanvas) {
+            const flippedCanvas = document.createElement('canvas');
+            const flippedCtx = flippedCanvas.getContext('2d');
+            flippedCanvas.width = sourceCanvas.width;
+            flippedCanvas.height = sourceCanvas.height;
+
+            // Flip horizontally
+            flippedCtx.translate(flippedCanvas.width, 0);
+            flippedCtx.scale(-1, 1);
+            flippedCtx.drawImage(sourceCanvas, 0, 0);
+
+            return flippedCanvas;
+        }
 
         retakeBtn.addEventListener('click', () => {
             capturedImage.style.display = 'none';
             video.style.display = 'block';
             captureBtn.style.display = 'inline-block';
+            switchCameraBtn.style.display = 'inline-block';
             retakeBtn.style.display = 'none';
+            saveBtn.style.display = 'none';
+            currentImageData = null;
+        });
+
+        saveBtn.addEventListener('click', () => {
+            if (currentImageData) {
+                // Convert data URL to blob and save
+                const base64 = currentImageData.split(',')[1];
+                try {
+                    const result = JSON.parse(
+                        NativeBridge.saveImage(base64, currentFacingMode === 'user')
+                    );
+                    if (result.success) {
+                        alert('照片已保存到: ' + result.path);
+                    } else {
+                        alert('保存失败: ' + result.error);
+                    }
+                } catch (err) {
+                    alert('保存失败: ' + err.message);
+                }
+            }
         });
 
         startCamera();

@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl("file:///android_asset/index.html");
 
         tryGrantCameraPermission();
+        tryGrantStoragePermission();
     }
 
     @Override
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
+    private static final int REQUEST_STORAGE_PERMISSION = 1002;
 
     private void tryGrantCameraPermission() {
         if (hasCameraPermission()) {
@@ -85,6 +87,30 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
     }
 
+    private void tryGrantStoragePermission() {
+        if (hasStoragePermission()) {
+            return;
+        }
+
+        String packageName = getPackageName();
+        RootShellExecutor.CommandResult result =
+                RootShellExecutor.execute("pm grant " + packageName + " android.permission.WRITE_EXTERNAL_STORAGE");
+
+        if (!hasStoragePermission()) {
+            requestStoragePermission();
+        }
+    }
+
+    private boolean hasStoragePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestStoragePermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String[] permissions,
@@ -96,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "已授权相机权限", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "未获取相机权限，部分功能可能不可用", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "已授权存储权限", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "未获取存储权限，无法保存照片", Toast.LENGTH_LONG).show();
             }
         }
     }
