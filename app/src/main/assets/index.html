@@ -70,6 +70,17 @@
             border: 1px solid #ccc;
             border-radius: 8px;
         }
+        #base64Display {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            display: none;
+        }
         .button-group {
             margin: 15px 0;
         }
@@ -91,6 +102,7 @@
         <button id="saveBtn" style="display: none;" class="secondary">保存照片</button>
     </div>
     <img id="capturedImage" style="display: none;" alt="Captured Image">
+    <div id="base64Display"></div>
 
     <script>
         const video = document.getElementById('video');
@@ -101,6 +113,7 @@
         const capturedImage = document.getElementById('capturedImage');
         const whoamiResult = document.getElementById('whoamiResult');
         const cameraLabel = document.getElementById('cameraLabel');
+        const base64Display = document.getElementById('base64Display');
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -193,6 +206,8 @@
             switchCameraBtn.style.display = 'none';
             retakeBtn.style.display = 'inline-block';
             saveBtn.style.display = 'inline-block';
+            base64Display.style.display = 'block';
+            base64Display.textContent = currentImageData;
         });
 
         function flipCanvasHorizontally(sourceCanvas) {
@@ -216,6 +231,7 @@
             switchCameraBtn.style.display = 'inline-block';
             retakeBtn.style.display = 'none';
             saveBtn.style.display = 'none';
+            base64Display.style.display = 'none';
             currentImageData = null;
         });
 
